@@ -67,6 +67,19 @@ class AddonActionExecutor(object):
         _sync_library(videoid, operation)
         common.refresh_container()
 
+    @common.inject_video_id(path_offset=1)
+    @common.time_execution(immediate=False)
+    def trailer(self, videoid):
+        """Play the trailer"""
+        video_list = api.trailer(videoid)
+        if len(video_list.videoids) > 0:
+            # Get only the first trailer
+            #videoid = common.VideoId(
+            #    **{'movieid': video_list.videoids[0]})
+            url = common.build_url(pathitems=[video_list.videoids[0]],
+                                   mode=g.MODE_PLAY_TRAILER)
+            common.run_plugin(url)
+
     @common.time_execution(immediate=False)
     def purge_cache(self, pathitems=None):
         """Clear the cache. If on_disk param is supplied, also clear cached

@@ -607,3 +607,7 @@ msgstr ""
 msgctxt "#30147"
 msgid "Limits list results to about (higher numbers can cause timeouts)"
 msgstr ""
+
+msgctxt "#30148"
+msgid "Play the trailer"
+msgstr ""

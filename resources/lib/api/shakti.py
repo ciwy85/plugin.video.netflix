@@ -10,10 +10,10 @@ import resources.lib.cache as cache
 import resources.lib.kodi.ui as ui
 
 from .data_types import (LoLoMo, VideoList, VideoListSorted, SeasonList, EpisodeList,
-                         SearchVideoList, CustomVideoList)
+                         SearchVideoList, TrailerVideoList, CustomVideoList)
 from .paths import (VIDEO_LIST_PARTIAL_PATHS, SEASONS_PARTIAL_PATHS,
                     EPISODES_PARTIAL_PATHS, ART_PARTIAL_PATHS,
-                    GENRE_PARTIAL_PATHS, RANGE_SELECTOR)
+                    GENRE_PARTIAL_PATHS, TRAILER_PARTIAL_PATHS, RANGE_SELECTOR)
 from .exceptions import (InvalidVideoListTypeError, LoginFailedError, APIError,
                          NotLoggedInError, MissingCredentialsError)
 
@@ -262,6 +262,18 @@ def rate(videoid, rating):
              'titleid': videoid.value,
              'rating': rating}})
     ui.show_notification(common.get_local_string(30127).format(rating * 2))
+
+
+@catch_api_errors
+@common.time_execution(immediate=False)
+def trailer(videoid):
+    """Get the trailer of a video on Netflix and play it"""
+    common.debug('Requesting trailer list for {}'.format(videoid))
+    return TrailerVideoList(common.make_call(
+        'path_request',
+        build_paths(
+            ['videos', videoid.value, 'trailers',{"from": 0, "to": 35}], TRAILER_PARTIAL_PATHS)),
+        videoid.value)
 
 
 @catch_api_errors

@@ -2,6 +2,7 @@
 """Handle playback requests"""
 from __future__ import unicode_literals
 
+import xbmc
 import xbmcplugin
 import xbmcgui
 import inputstreamhelper
@@ -103,6 +104,76 @@ def get_inputstream_listitem(videoid):
         key='inputstreamaddon',
         value=is_helper.inputstream_addon)
     return list_item
+
+def get_inputstream_listitem_trailer(videoid):
+    """Return a listitem that has all inputstream relevant properties set
+    for playback of the given video_id"""
+    service_url = SERVICE_URL_FORMAT.format(
+        port=g.ADDON.getSetting('msl_service_port'))
+    manifest_path = MANIFEST_PATH_FORMAT.format(videoid=videoid)
+    list_item = xbmcgui.ListItem(path=service_url + manifest_path,
+                                 offscreen=True)
+    list_item.setContentLookup(False)
+    list_item.setMimeType('application/dash+xml')
+
+    is_helper = inputstreamhelper.Helper('mpd', drm='widevine')
+
+    if not is_helper.check_inputstream():
+        raise InputstreamError('inputstream.adaptive is not available')
+
+    list_item.setProperty(
+        key=is_helper.inputstream_addon + '.stream_headers',
+        value='user-agent=' + common.get_user_agent())
+    list_item.setProperty(
+        key=is_helper.inputstream_addon + '.license_type',
+        value='com.widevine.alpha')
+    list_item.setProperty(
+        key=is_helper.inputstream_addon + '.manifest_type',
+        value='mpd')
+    list_item.setProperty(
+        key=is_helper.inputstream_addon + '.license_key',
+        value=service_url + LICENSE_PATH_FORMAT.format(videoid=videoid) +
+        '||b{SSM}!b{SID}|')
+    list_item.setProperty(
+        key=is_helper.inputstream_addon + '.server_certificate',
+        value=INPUTSTREAM_SERVER_CERTIFICATE)
+    list_item.setProperty(
+        key='inputstreamaddon',
+        value=is_helper.inputstream_addon)
+    return list_item
+
+@common.time_execution(immediate=False)
+def play_trailer(videoid):
+    videoid = videoid[0]
+    common.debug('Playing trailer {}'.format(videoid))
+
+    #list_item = xbmcgui.ListItem(path='https://www.netflix.com/watch/' + videoid)
+    #list_item.setProperty('isFolder', 'false')
+    #list_item.setProperty('IsPlayable', 'true')
+    #list_item.setInfo(type='Video', infoLabels={'title': 'Trailer'})
+
+
+    list_item = get_inputstream_listitem_trailer(videoid)
+
+
+    #playback_url = 'https://www.netflix.com/watch/' + videoid
+    #xbmc.Player().play(playback_url)
+
+    common.debug('Sending initialization signal')
+    videoid_dict = {'mediatype': 'videoid'}
+    videoid_dict.update({'videoid':videoid})
+
+    common.send_signal(common.Signals.PLAYBACK_INITIATED, {
+        'videoid': videoid_dict,
+        'infos': '',
+        'art': None,
+        'timeline_markers': [],
+        'upnext_info': None})
+    # Pass the item to the Kodi player
+    xbmcplugin.setResolvedUrl(
+        handle=g.PLUGIN_HANDLE,
+        succeeded=True,
+        listitem=list_item)
 
 
 def _verify_pin(pin_required):

@@ -36,6 +36,9 @@ CONTEXT_MENU_ACTIONS = {
     'remove_from_list': {
         'label': common.get_local_string(30020),
         'url': ctx_item_url(['my_list', 'remove'])},
+    'trailer': {
+        'label': common.get_local_string(30148),
+        'url': ctx_item_url(['trailer'])},
 }
 
 
@@ -45,6 +48,10 @@ def generate_context_menu_items(videoid):
 
     if videoid.mediatype != common.VideoId.SEASON:
         items.insert(0, _ctx_item('rate', videoid))
+
+
+    items.insert(0, _ctx_item('trailer', videoid))
+
 
     if videoid.mediatype in [common.VideoId.MOVIE, common.VideoId.SHOW]\
         and g.PERSISTENT_STORAGE.get('profile_have_mylist_menu', False):
